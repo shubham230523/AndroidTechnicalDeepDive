@@ -2,6 +2,7 @@ package com.shubhamthorat.androidtechnicaldeepdive
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.channels.*
 
 /**
  * MASTERING KOTLIN FLOWS: 0 TO 100
@@ -109,6 +110,18 @@ class HotFlowsDemo {
         _stateFlow.value = 5 // Updates state
         _sharedFlow.emit("Show Toast") // Sends one-time event
     }
+
+    /**
+     * INTERVIEW BEST PRACTICE: One-Time Events (Channels)
+     * Why not use SharedFlow? While SharedFlow works, a Channel is more 'robust'
+     * for events that MUST be handled exactly once.
+     */
+    private val _eventChannel = Channel<String>()
+    val eventFlow = _eventChannel.receiveAsFlow()
+
+    fun triggerEvent() = runBlocking {
+        _eventChannel.send("Navigate to Home")
+    }
 }
 
 /**
@@ -167,9 +180,38 @@ object FlatteningDemo {
 }
 
 /**
- * FLOW VS LIVEDATA (Interview Quick Tips):
- * 1. Flow is part of Kotlin; LiveData is part of Android.
- * 2. Flow has powerful operators (combine, zip, flatMap).
- * 3. Flow is not Lifecycle-aware by default (needs repeatOnLifecycle in Android).
- * 4. StateFlow requires an initial value; LiveData doesn't.
+ * CONCEPT 10: Channels (The "Hot" Primitive)
+ * Channels are conceptually similar to BlockingQueue, but they use suspending 
+ * operations instead of blocking ones.
+ * 
+ * Flow vs Channel:
+ * - Flow: Cold, Unicast (standard Flow), declarative.
+ * - Channel: Hot, Unicast (Point-to-point, even with multiple receivers), imperative.
  */
+object ChannelsDemo {
+    fun basicChannel() = runBlocking {
+        val channel = Channel<Int>()
+        
+        launch {
+            for (x in 1..5) {
+                channel.send(x * x)
+            }
+            channel.close() // Important: Close to indicate end of stream
+        }
+
+        // Multiple receivers can "consume" from the same channel
+        for (y in channel) {
+            println("Received: $y")
+        }
+    }
+
+    /**
+     * CHANNEL TYPES (Interview Tip):
+     * 1. Rendezvous (Default): No buffer. Sender suspends until receiver arrives.
+     * 2. Buffered: Has a fixed size buffer. Sender suspends only when buffer is full.
+     * 3. Unlimited: Infinite buffer (careful with memory!).
+     * 4. Conflated: Keeps only the LATEST value. Sender never suspends.
+     */
+    val bufferedChannel = Channel<Int>(capacity = 10)
+    val conflatedChannel = Channel<Int>(Channel.CONFLATED)
+}

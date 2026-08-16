@@ -17,6 +17,7 @@ This project is a comprehensive guide to mastering core Android development conc
 - **Context & Buffering:** Using `flowOn` and handling backpressure with `buffer()` and `conflate()`.
 - **Hot Flows:** Deep dive into `StateFlow` (UI State) vs `SharedFlow` (Events/Actions).
 - **Combining & Flattening:** `zip`, `combine`, `flatMapConcat`, `flatMapMerge`, and `flatMapLatest`.
+- **Channels:** Understanding Hot streams, `Channel` types (Rendezvous, Buffered, Conflated, Unlimited), and the difference between Flow and Channel.
 
 ## 🔗 External Resources
 To complement the code in this repository, the following playlists by Philipp Lackner are highly recommended:
