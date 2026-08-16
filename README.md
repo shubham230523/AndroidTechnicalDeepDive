@@ -19,11 +19,24 @@ This project is a comprehensive guide to mastering core Android development conc
 - **Combining & Flattening:** `zip`, `combine`, `flatMapConcat`, `flatMapMerge`, and `flatMapLatest`.
 - **Channels:** Understanding Hot streams, `Channel` types (Rendezvous, Buffered, Conflated, Unlimited), and the difference between Flow and Channel.
 
+### 3. Android Navigation (0 to 100)
+- **Type-Safe Navigation:** Using `@Serializable` objects and classes instead of String routes.
+- **NavHost & NavController:** Setting up the navigation container and controller.
+- **Arguments:** Passing data between screens using type-safe data classes.
+- **Nested Navigation:** Grouping routes using `navigation` graphs.
+- **Bottom Navigation:** Best practices for tab switching (saveState/restoreState).
+- **Deep Linking:** Handling external app links type-safely.
+- **Interview Strategy:** Handling complex arguments and multiple backstacks.
+
 ## 🔗 External Resources
 To complement the code in this repository, the following playlists by Philipp Lackner are highly recommended:
 
 - [Kotlin Coroutines Playlist](https://youtube.com/playlist?list=PLQkwcJG4YTCQcFEPuYGuv54nYai_lwil_&si=Au8KAGchorYvQI2x)
 - [Kotlin Flows Playlist](https://youtube.com/playlist?list=PLQkwcJG4YTCQHCppNAQmLsj_jW38rU9sC&si=4NHbJu7CJ8fk11zJ)
+
+### Official Navigation Resources
+- [Type-Safe Navigation in Compose](https://developer.android.com/develop/ui/compose/navigation#type-safe)
+- [Nested Navigation Graphs](https://developer.android.com/develop/ui/compose/navigation#nested-graphs)
 
 ## 🛠️ How to use this project
 1. Open the `.kt` files in the `com.shubhamthorat.androidtechnicaldeepdive` package.
