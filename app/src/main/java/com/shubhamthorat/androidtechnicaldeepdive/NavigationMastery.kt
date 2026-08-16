@@ -1,168 +1,353 @@
 package com.shubhamthorat.androidtechnicaldeepdive
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
+import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entry
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+
 import kotlinx.serialization.Serializable
-import kotlin.reflect.typeOf
 
 /**
- * MASTERING ANDROID NAVIGATION (COMPOSE): 0 TO 100
+ * ANDROID NAVIGATION MASTERY (0 to 100) - INTERVIEW EDITION
  *
- * CONCEPT 1: Type-Safe Navigation (The Modern Way)
- * Gone are the days of string routes like "home_screen".
- * Now we use @Serializable objects and classes.
+ * Deep-dive into Jetpack Navigation (Type-Safe) and Navigation 3.
  */
 
-// 1. Define your destinations
-@Serializable
-object HomeRoute
+// =========================================================================================
+// PART 1: JETPACK NAVIGATION COMPOSE
+// =========================================================================================
 
 @Serializable
-data class ProfileRoute(
-    val id: String,
-    val name: String
+data object HomeRoute
+
+@Serializable
+data class ProductDetailsRoute(
+    val id: Int,
+    val category: String
 )
 
 @Serializable
-object SettingsGraph
+data object SettingsGraph
 
 @Serializable
-object SettingsRoute
+data object ProfileRoute
 
-/**
- * CONCEPT 2: NavHost and NavController
- * NavController: The brain. It manages navigation and the backstack.
- * NavHost: The container that displays the destinations.
- */
+@Serializable
+data object PrivacyRoute
+
 @Composable
-fun AppNavigation() {
+fun Navigation2MasteryApp() {
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
         startDestination = HomeRoute
     ) {
-        // Simple Destination
+
         composable<HomeRoute> {
-            HomeScreen(
-                onNavigateToProfile = { id, name ->
-                    navController.navigate(ProfileRoute(id, name))
+
+            HomeScreenV2(
+                onGoToProduct = { id, category ->
+                    navController.navigate(
+                        ProductDetailsRoute(
+                            id = id,
+                            category = category
+                        )
+                    )
+                },
+                onGoToSettings = {
+                    navController.navigate(SettingsGraph)
                 }
             )
         }
 
-        // Destination with Arguments
-        composable<ProfileRoute> { backStackEntry ->
-            // Extract arguments using toRoute<T>()
-            val profile: ProfileRoute = backStackEntry.toRoute()
-            ProfileScreen(profile.id, profile.name)
+        composable<ProductDetailsRoute> { entry ->
+
+            val route = entry.toRoute<ProductDetailsRoute>()
+
+            ProductDetailsScreenV2(
+                productId = route.id,
+                category = route.category,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
-        /**
-         * CONCEPT 3: Nested Navigation (NavGraphs)
-         * Used to group related screens (e.g., Auth flow, Onboarding).
-         * Helps in modularizing the app and clear backstack management.
-         */
-        navigation<SettingsGraph>(startDestination = SettingsRoute) {
-            composable<SettingsRoute> {
-                SettingsScreen()
+        navigation<SettingsGraph>(
+            startDestination = ProfileRoute
+        ) {
+
+            composable<ProfileRoute> {
+
+                ProfileScreen(
+                    onGoToPrivacy = {
+                        navController.navigate(PrivacyRoute)
+                    }
+                )
+            }
+
+            composable<PrivacyRoute> {
+
+                PrivacyScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
 }
 
-/**
- * CONCEPT 4: Navigation Actions & Backstack
- * - navigate(route): Push a new destination.
- * - popBackStack(): Go back one step.
- * - popUpTo(route) { inclusive = true }: Clear backstack until a point.
- */
+
+// =========================================================================================
+// PART 2: NAVIGATION 3
+// =========================================================================================
+
+@Serializable
+data object DashboardKey : NavKey
+
+@Serializable
+data class DetailsKey(
+    val id: String
+) : NavKey
+
 @Composable
-fun HomeScreen(onNavigateToProfile: (String, String) -> Unit) {
-    Column {
-        Text("Home Screen")
-        Button(onClick = { onNavigateToProfile("123", "Shubham") }) {
-            Text("Go to Profile")
+fun Navigation3MasteryApp() {
+
+    val backStack = rememberNavBackStack(DashboardKey)
+
+    val entryProvider = entryProvider<NavKey> {
+
+        entry<DashboardKey> { key ->
+
+            DashboardScreen(
+                onOpenDetails = { id ->
+                    backStack.add(
+                        DetailsKey(id)
+                    )
+                }
+            )
+        }
+
+        entry<DetailsKey> { key ->
+
+            Nav3DetailsScreen(
+                id = key.id,
+                onBack = {
+                    if (backStack.size > 1) {
+                        backStack.removeLastOrNull()
+                    }
+                }
+            )
+        }
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = {
+            if (backStack.size > 1) {
+                backStack.removeLastOrNull()
+            }
+        },
+        entryProvider = entryProvider
+    )
+}
+
+
+// =========================================================================================
+// UI COMPONENTS
+// =========================================================================================
+
+@Composable
+fun HomeScreenV2(
+    onGoToProduct: (Int, String) -> Unit,
+    onGoToSettings: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(
+            text = "Home (Type-Safe)",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
+        Button(
+            onClick = {
+                onGoToProduct(42, "Gadgets")
+            }
+        ) {
+            Text("Go to Product 42")
+        }
+
+        Button(
+            onClick = onGoToSettings
+        ) {
+            Text("Go to Settings")
         }
     }
 }
 
-@Composable
-fun ProfileScreen(id: String, name: String) {
-    Column {
-        Text("Profile Screen")
-        Text("ID: $id, Name: $name")
-    }
-}
 
 @Composable
-fun SettingsScreen() {
-    Text("Settings Screen")
-}
+fun ProductDetailsScreenV2(
+    productId: Int,
+    category: String,
+    onBack: () -> Unit
+) {
 
-/**
- * CONCEPT 5: Bottom Navigation & Multiple Backstacks
- * Interview Tip: When switching tabs, you should save and restore state
- * so the user doesn't lose their place in each tab.
- */
-fun bottomNavExample(navController: NavController) {
-    navController.navigate(HomeRoute) {
-        // Pop up to the start destination of the graph to
-        // avoid building up a large stack of destinations
-        // on the back stack as users select items
-        popUpTo(navController.graph.startDestinationId) {
-            saveState = true
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(
+            text = "Product ID: $productId",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Text(
+            text = "Category: $category"
+        )
+
+        Button(
+            onClick = onBack
+        ) {
+            Text("Back")
         }
-        // Avoid multiple copies of the same destination when
-        // reselecting the same item
-        launchSingleTop = true
-        // Restore state when reselecting a previously selected item
-        restoreState = true
     }
 }
 
-/**
- * CONCEPT 6: Deep Linking
- * Allows users to open specific screens in your app via a URL.
- */
-@Serializable
-data class DetailRoute(val id: Int)
 
-val deepLinks = listOf(
-    navDeepLink<DetailRoute>(basePath = "https://www.example.com/detail")
-)
+@Composable
+fun ProfileScreen(
+    onGoToPrivacy: () -> Unit
+) {
 
-// In NavHost:
-// composable<DetailRoute>(deepLinks = deepLinks) { ... }
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-/**
- * CONCEPT 7: Custom Types (Advanced Arguments)
- * Interview Question: Can we pass complex objects in Navigation?
- * Answer: Yes, by using a custom NavType, but it's generally discouraged.
- * Best practice is to pass the ID and fetch the data.
- */
-@Serializable
-data class User(val id: Int, val name: String)
+        Text(
+            text = "Profile",
+            style = MaterialTheme.typography.headlineMedium
+        )
 
-// To pass this, you'd define:
-// val UserType = object : NavType<User>(isNullableAllowed = false) { ... }
-// Then in composable<DetailRoute>(typeMap = mapOf(typeOf<User>() to UserType))
+        Button(
+            onClick = onGoToPrivacy
+        ) {
+            Text("Privacy")
+        }
+    }
+}
 
-/**
- * NAVIGATION INTERVIEW CHEAT SHEET:
- * 1. Type-Safety: Use @Serializable (Route as data class/object).
- * 2. NavHost: The container mapping routes to Composables.
- * 3. NavController: Handles the actual navigation logic.
- * 4. toRoute<T>(): The extension to extract type-safe arguments.
- * 5. Deep Linking: Routes can be mapped to external URLs.
- * 6. Multiple Backstacks: Essential for Bottom Nav (saveState/restoreState).
- */
+
+@Composable
+fun PrivacyScreen(
+    onBack: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(
+            text = "Privacy",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Button(
+            onClick = onBack
+        ) {
+            Text("Back")
+        }
+    }
+}
+
+
+@Composable
+fun DashboardScreen(
+    onOpenDetails: (String) -> Unit
+) {
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(
+            text = "Nav 3 Dashboard",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Button(
+            onClick = {
+                onOpenDetails("NAV3-001")
+            }
+        ) {
+            Text("Open Details")
+        }
+    }
+}
+
+
+@Composable
+fun Nav3DetailsScreen(
+    id: String,
+    onBack: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text(
+            text = "Nav 3 Details: $id",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        Button(
+            onClick = onBack
+        ) {
+            Text("Back")
+        }
+    }
+}
